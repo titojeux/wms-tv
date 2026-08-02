@@ -1,0 +1,48 @@
+# docker-compose for Coolify (or any Docker host)
+# Coolify: create a new "Docker Compose" resource, paste this file, then set env vars in the UI.
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: ${DB_NAME:-wmstv}
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      DB_NAME: ${DB_NAME:-wmstv}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://wms-tv.online,https://www.wms-tv.online}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    expose:
+      - "8001"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Empty on purpose → axios calls `/api/…` which nginx proxies to `backend`.
+        REACT_APP_BACKEND_URL: ""
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      # Coolify will map its public HTTPS proxy to port 80.
+      - "80"
+
+volumes:
+  mongo_data:

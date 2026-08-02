@@ -1,0 +1,17 @@
+/app/backend/.env
+/app/backend/venv
+/app/backend/__pycache__
+/app/backend/**/__pycache__
+/app/backend/tests
+/app/frontend/.env
+/app/frontend/node_modules
+/app/frontend/build
+/app/frontend/.eslintcache
+/app/memory
+/app/test_reports
+/app/scripts
+/app/tests
+/app/design_guidelines.json
+.git
+.gitignore
+README.md
